@@ -22,10 +22,12 @@
 
 package ij3d.shapes;
 
-import java.awt.*;
+import java.awt.Font;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.scijava.java3d.Appearance;
 import org.scijava.java3d.BranchGroup;
@@ -140,36 +142,30 @@ public class BoundingBox extends BranchGroup {
 		// x text
 		if (lx > 0) {
 			float v = this.min.x + fx;
-			Point3f pos =
-					new Point3f(v, this.min.y - 1.5f * tickSize, this.min.z - 1.5f * tickSize);
+			Point3f pos = new Point3f(v, this.min.y - 1.5f * tickSize, this.min.z - 1.5f * tickSize);
 			addText(df.format(v), pos, fontsize, color);
 			v = this.min.x + fx + tickDistance;
-			pos =
-					new Point3f(v, this.min.y - 1.5f * tickSize, this.min.z - 1.5f * tickSize);
+			pos = new Point3f(v, this.min.y - 1.5f * tickSize, this.min.z - 1.5f * tickSize);
 			addText(df.format(v), pos, fontsize, color);
 		}
 
 		// y text
 		if (ly > 0) {
 			float v = this.min.y + fy;
-			Point3f pos =
-					new Point3f(this.min.x - 1.5f * tickSize, v, this.min.z - 1.5f * tickSize);
+			Point3f pos = new Point3f(this.min.x - 1.5f * tickSize, v, this.min.z - 1.5f * tickSize);
 			addText(df.format(v), pos, fontsize, color);
 			v = this.min.y + fy + tickDistance;
-			pos =
-					new Point3f(this.min.x - 1.5f * tickSize, v, this.min.z - 1.5f * tickSize);
+			pos = new Point3f(this.min.x - 1.5f * tickSize, v, this.min.z - 1.5f * tickSize);
 			addText(df.format(v), pos, fontsize, color);
 		}
 
 		// z text
 		if (lz > 0) {
 			float v = this.min.z + fz;
-			Point3f pos =
-					new Point3f(this.min.x - 1.5f * tickSize, this.min.y - 1.5f * tickSize, v);
+			Point3f pos = new Point3f(this.min.x - 1.5f * tickSize, this.min.y - 1.5f * tickSize, v);
 			addText(df.format(v), pos, fontsize, color);
 			v = this.min.z + fz + tickDistance;
-			pos =
-					new Point3f(this.min.x - 1.5f * tickSize, this.min.y - 1.5f * tickSize, v);
+			pos = new Point3f(this.min.x - 1.5f * tickSize, this.min.y - 1.5f * tickSize, v);
 			addText(df.format(v), pos, fontsize, color);
 		}
 	}
