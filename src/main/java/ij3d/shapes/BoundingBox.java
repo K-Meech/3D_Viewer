@@ -22,8 +22,10 @@
 
 package ij3d.shapes;
 
-import java.awt.Font;
+import java.awt.*;
 import java.text.DecimalFormat;
+import java.util.*;
+import java.util.List;
 
 import org.scijava.java3d.Appearance;
 import org.scijava.java3d.BranchGroup;
@@ -72,6 +74,8 @@ public class BoundingBox extends BranchGroup {
 		max.x += 0;
 		max.y += 0;
 		max.z += 0;
+
+		// points at the 8 corners of the 3D bounding box
 		final Point3f[] p = new Point3f[8];
 		p[0] = new Point3f(min.x, min.y, max.z);
 		p[1] = new Point3f(max.x, min.y, max.z);
@@ -88,18 +92,18 @@ public class BoundingBox extends BranchGroup {
 		final float lx = max.x - min.x;
 		final float ly = max.y - min.y;
 		final float lz = max.z - min.z;
-		final float max = Math.max(lx, Math.max(ly, lz));
-		float min = Math.min(lx, Math.min(ly, lz));
-		if (min == 0 || max / min > 100) min = max;
+		final float lmax = Math.max(lx, Math.max(ly, lz));
+		float lmin = Math.min(lx, Math.min(ly, lz));
+		if (lmin == 0 || lmax / lmin > 100) lmin = lmax;
 		double tmp = 0.00001f;
-		while (min / tmp > 5)
+		while (lmin / tmp > 5)
 			tmp *= 10;
 
-		if (min / tmp < 2) tmp = tmp / 2;
+		if (lmin / tmp < 2) tmp = tmp / 2;
 
 		final float tickDistance = (float) tmp;
 
-		final float tickSize = max / 50;
+		final float tickSize = lmax / 50;
 
 		final Color3f c = color;
 		final float td = tickDistance;
@@ -109,20 +113,23 @@ public class BoundingBox extends BranchGroup {
 		final float fy = tickDistance - (this.min.y % tickDistance);
 		final float fz = tickDistance - (this.min.z % tickDistance);
 
-		shape.addGeometry(makeLine(p[0], p[1], c, td, 0f, ts, true));
-		shape.addGeometry(makeLine(p[1], p[2], c, td, 0f, ts, true));
-		shape.addGeometry(makeLine(p[2], p[3], c, td, 0f, ts, true));
-		shape.addGeometry(makeLine(p[3], p[0], c, td, 0f, ts, true));
+		if (lx > 0) {
+			// All points that include min.x
+			List<Point3f> minXPoints = Arrays.asList(p[0], p[3], p[4], p[7]);
+			addLinesForAxis(shape, minXPoints, 0, c, td, fx, ts);
+		}
 
-		shape.addGeometry(makeLine(p[4], p[5], c, td, fx, ts, false));
-		shape.addGeometry(makeLine(p[5], p[6], c, td, 0f, ts, true));
-		shape.addGeometry(makeLine(p[6], p[7], c, td, 0f, ts, true));
-		shape.addGeometry(makeLine(p[4], p[7], c, td, fy, ts, false));
+		if (ly > 0) {
+			// All points that include min.y
+			List<Point3f> minYPoints = Arrays.asList(p[0], p[1], p[4], p[5]);
+			addLinesForAxis(shape, minYPoints, 1, c, td, fy, ts);
+		}
 
-		shape.addGeometry(makeLine(p[4], p[0], c, td, fz, ts, false));
-		shape.addGeometry(makeLine(p[1], p[5], c, td, 0f, ts, true));
-		shape.addGeometry(makeLine(p[2], p[6], c, td, 0f, ts, true));
-		shape.addGeometry(makeLine(p[3], p[7], c, td, 0f, ts, true));
+		if (lz > 0) {
+			// All points that include min.z
+			List<Point3f> minZPoints = Arrays.asList(p[4], p[5], p[6], p[7]);
+			addLinesForAxis(shape, minZPoints, 2, c, td, fz, ts);
+		}
 
 		shape.setAppearance(createAppearance(color));
 		addChild(shape);
@@ -131,34 +138,67 @@ public class BoundingBox extends BranchGroup {
 		final DecimalFormat df = new DecimalFormat("#.##");
 
 		// x text
-		float v = this.min.x + fx;
-		Point3f pos =
-			new Point3f(v, this.min.y - 1.5f * tickSize, this.min.z - 1.5f * tickSize);
-		addText(df.format(v), pos, fontsize, color);
-		v = this.min.x + fx + tickDistance;
-		pos =
-			new Point3f(v, this.min.y - 1.5f * tickSize, this.min.z - 1.5f * tickSize);
-		addText(df.format(v), pos, fontsize, color);
+		if (lx > 0) {
+			float v = this.min.x + fx;
+			Point3f pos =
+					new Point3f(v, this.min.y - 1.5f * tickSize, this.min.z - 1.5f * tickSize);
+			addText(df.format(v), pos, fontsize, color);
+			v = this.min.x + fx + tickDistance;
+			pos =
+					new Point3f(v, this.min.y - 1.5f * tickSize, this.min.z - 1.5f * tickSize);
+			addText(df.format(v), pos, fontsize, color);
+		}
 
 		// y text
-		v = this.min.y + fy;
-		pos =
-			new Point3f(this.min.x - 1.5f * tickSize, v, this.min.z - 1.5f * tickSize);
-		addText(df.format(v), pos, fontsize, color);
-		v = this.min.y + fy + tickDistance;
-		pos =
-			new Point3f(this.min.x - 1.5f * tickSize, v, this.min.z - 1.5f * tickSize);
-		addText(df.format(v), pos, fontsize, color);
+		if (ly > 0) {
+			float v = this.min.y + fy;
+			Point3f pos =
+					new Point3f(this.min.x - 1.5f * tickSize, v, this.min.z - 1.5f * tickSize);
+			addText(df.format(v), pos, fontsize, color);
+			v = this.min.y + fy + tickDistance;
+			pos =
+					new Point3f(this.min.x - 1.5f * tickSize, v, this.min.z - 1.5f * tickSize);
+			addText(df.format(v), pos, fontsize, color);
+		}
 
 		// z text
-		v = this.min.z + fz;
-		pos =
-			new Point3f(this.min.x - 1.5f * tickSize, this.min.y - 1.5f * tickSize, v);
-		addText(df.format(v), pos, fontsize, color);
-		v = this.min.z + fz + tickDistance;
-		pos =
-			new Point3f(this.min.x - 1.5f * tickSize, this.min.y - 1.5f * tickSize, v);
-		addText(df.format(v), pos, fontsize, color);
+		if (lz > 0) {
+			float v = this.min.z + fz;
+			Point3f pos =
+					new Point3f(this.min.x - 1.5f * tickSize, this.min.y - 1.5f * tickSize, v);
+			addText(df.format(v), pos, fontsize, color);
+			v = this.min.z + fz + tickDistance;
+			pos =
+					new Point3f(this.min.x - 1.5f * tickSize, this.min.y - 1.5f * tickSize, v);
+			addText(df.format(v), pos, fontsize, color);
+		}
+	}
+
+	private void addLinesForAxis(Shape3D shape, List<Point3f> minPoints, int axis, Color3f c,
+								 float td, float f, float ts) {
+
+		// Store points in a set (to eliminate any duplicates)
+		Set<Point3f> minPointsSet = new HashSet<>(minPoints);
+
+		// Draw a line from each minimum point aligned with the correct axis (0=x, 1=y, 2=z)
+		for (Point3f minPoint : minPointsSet) {
+
+			Point3f maxPoint = new Point3f(minPoint);
+			if (axis == 0) {
+				maxPoint.x = max.x;
+			} else if (axis == 1) {
+				maxPoint.y = max.y;
+			} else {
+				maxPoint.z = max.z;
+			}
+
+			// if drawing a line out of the bounding box minimum, include tick marks
+			if (minPoint.equals(min)) {
+				shape.addGeometry(makeLine(minPoint, maxPoint, c, td, f, ts, false));
+			} else {
+				shape.addGeometry(makeLine(minPoint, maxPoint, c, td, 0f, ts, true));
+			}
+		}
 	}
 
 	private void addText(final String s, final Point3f pos, final float fontsize,
@@ -201,6 +241,10 @@ public class BoundingBox extends BranchGroup {
 		final float tickSize, final boolean noTicks)
 	{
 		final float lineLength = start.distance(end);
+		if (lineLength == 0) {
+			throw new IllegalArgumentException("Can't create a line of length zero");
+		}
+
 		final int nTicks =
 			(int) Math.floor((lineLength - first) / tickDistance) + 1;
 
